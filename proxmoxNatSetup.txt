@@ -10,8 +10,18 @@ iface vmbr0 inet static
         bridge-ports <interface>
         bridge-stp off
         bridge-fd 0
-        #post-up echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp
+        #Next 2 lines are for ARP Proxy and routing for public IP on VMs
+        #post-up echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp 
         #post-up ip route add <publicIP>/24 dev vmbr0
+
+iface vmbr0 inet6 static
+        address <mainV6IP>::2/48
+        bridge_ports eth0
+        bridge_stp off
+        bridge_fd 0
+        gateway <mainV6Gateway>
+        dns-nameservers 2001:4860:4860::8888 2001:4860:4860::8844 # Googles DNS
+        post-up echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 #Public IP
 
 auto vmbr1
@@ -20,7 +30,7 @@ iface vmbr1 inet static
         bridge-ports none
         bridge-stp off
         bridge-fd 0
-#Nat Network
         post-up echo 1 > /proc/sys/net/ipv4/ip_forward
         post-up   iptables -t nat -A POSTROUTING -s '192.168.1.0/24' -o vmbr0 -j MASQUERADE
         post-down iptables -t nat -D POSTROUTING -s '192.168.1.0/24' -o vmbr0 -j MASQUERADE
+#Nat Network
